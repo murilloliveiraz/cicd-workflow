@@ -2,9 +2,6 @@ name: Auto Open PR
 
 on:
   push:
-    branches:
-      - "**"
-    # Ignora main e develop
     branches-ignore:
       - main
       - develop
