@@ -14,12 +14,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Create Pull Request
+      - name: Get current branch name
+        run: echo "branch_name=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+
+      - name: Create Pull Request to develop
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          base: develop        # destino da PR
-          branch: ${{ github.ref_name }}  # branch origem
-          title: "Auto PR - ${{ github.ref_name }}"
-          body: "PR automática criada no push para a branch `${{ github.ref_name }}`."
+          base: develop
+          head: ${{ env.branch_name }}
+          title: "Auto PR: ${{ env.branch_name }} → develop"
+          body: "Pull request automática gerada pelo workflow."
           draft: false
