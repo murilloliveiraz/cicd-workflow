@@ -1,4 +1,4 @@
-name: Auto Open PR
+name: Auto PR to develop
 
 on:
   push:
@@ -7,29 +7,22 @@ on:
       - develop
 
 jobs:
-  create-pull-request:
+  auto-pr:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Get current branch name
-        id: vars
-        run: echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+        run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
 
       - name: Create Pull Request to develop
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-
-          branch: "auto-pr/${{ steps.vars.outputs.branch }}"
-
           base: develop
-
-          title: "Auto PR: ${{ steps.vars.outputs.branch }} → develop"
+          branch: auto-pr/${{ env.BRANCH_NAME }}
+          title: "Auto PR: ${{ env.BRANCH_NAME }} → develop"
           body: |
-            Pull request automática criada a partir do branch:
-            **${{ steps.vars.outputs.branch }}**
-
-          labels: auto-pr
+            Pull request gerado automaticamente.
+          labels: automatic
