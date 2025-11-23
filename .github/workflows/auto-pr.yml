@@ -7,22 +7,22 @@ on:
       - develop
 
 jobs:
-  auto-pr:
+  open-pr:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Create PR via GitHub API
+        run: |
+          BRANCH="${GITHUB_REF#refs/heads/}"
 
-      - name: Get current branch name
-        run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          echo "Criando PR de $BRANCH para develop..."
 
-      - name: Create Pull Request to develop
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          base: develop
-          branch: auto-pr/${{ env.BRANCH_NAME }}
-          title: "Auto PR: ${{ env.BRANCH_NAME }} → develop"
-          body: |
-            Pull request gerado automaticamente.
-          labels: automatic
+          gh api repos/${{ github.repository }}/pulls \
+            -f title="Auto PR: $BRANCH → develop" \
+            -f head="$BRANCH" \
+            -f base="develop" \
+            -f body="Pull request automática gerada pelo workflow." \
+            || echo "PR já existe ou erro ignorável."
+
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
