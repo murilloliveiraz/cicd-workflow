@@ -1,1 +1,1 @@
-print("vamo laa")
+print("vamo la denvo")
