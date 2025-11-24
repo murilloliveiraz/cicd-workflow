@@ -6,23 +6,41 @@ on:
       - main
       - develop
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
-  open-pr:
+  create-pr:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Create PR via GitHub API
-        run: |
-          BRANCH="${GITHUB_REF#refs/heads/}"
+      - name: Get current branch
+        id: vars
+        run: echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
 
-          echo "Criando PR de $BRANCH para develop..."
+      - name: Create PR to develop
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branch = "${{ steps.vars.outputs.branch }}";
 
-          gh api repos/${{ github.repository }}/pulls \
-            -f title="Auto PR: $BRANCH → develop" \
-            -f head="$BRANCH" \
-            -f base="develop" \
-            -f body="Pull request automática gerada pelo workflow." \
-            || echo "PR já existe ou erro ignorável."
+            // evita PR da develop → develop
+            if (branch === "develop") {
+              return;
+            }
 
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            try {
+              await github.rest.pulls.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `Auto PR: ${branch} → develop`,
+                head: branch,
+                base: "develop"
+              });
+            } catch (e) {
+              if (e.status === 422) {
+                console.log("PR já existe");
+              } else {
+                throw e;
+              }
+            }
